@@ -16,6 +16,7 @@ func main() {
 		w.Write([]byte("hello"))
 	})
 	r.HandleFunc("/posts", handler.GetAllPosts).Methods(http.MethodGet)
+	r.HandleFunc("/posts", handler.AddPost).Methods(http.MethodPost)
 
 	http.ListenAndServe(port, r)
 }
