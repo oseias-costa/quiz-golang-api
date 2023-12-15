@@ -28,3 +28,25 @@ func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(result)
 }
+
+func AddPost(w http.ResponseWriter, r *http.Request) {
+	var post Post
+	err := json.NewDecoder(r.Body).Decode(&post)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "error with unmarshall"}`))
+		return
+	}
+
+	post.Id = len(posts) + 1
+	posts = append(posts, post)
+
+	newPost, err := json.Marshal(post)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "errpr with unmarshall"}`))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(newPost)
+}
