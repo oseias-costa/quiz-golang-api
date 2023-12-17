@@ -2,35 +2,32 @@ package handler
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
+
+	"github.com/oseias-costa/quiz-golang-api/entity"
+	"github.com/oseias-costa/quiz-golang-api/repository"
 )
 
-type Post struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-	Age  int    `json:"age"`
-}
-
-var posts []Post
-
-func init() {
-	posts = []Post{{Id: 1, Name: "Oséias Costa", Age: 32}, {Id: 2, Name: "Leo Borilli", Age: 29}}
-}
+var (
+	repo repository.PostRepository = repository.NewPostRepository()
+)
 
 func GetAllPosts(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "application/json")
-	result, err := json.Marshal(posts)
+	posts, err := repo.FindAll()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"message": "error json"}`))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"message": "error getting posts"}`))
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(result)
+	json.NewEncoder(w).Encode(posts)
 }
 
 func AddPost(w http.ResponseWriter, r *http.Request) {
-	var post Post
+	var post entity.Post
 	err := json.NewDecoder(r.Body).Decode(&post)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -38,15 +35,9 @@ func AddPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post.Id = len(posts) + 1
-	posts = append(posts, post)
+	post.Id = rand.Int63()
+	repo.Save(&post)
 
-	newPost, err := json.Marshal(post)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "errpr with unmarshall"}`))
-		return
-	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(newPost)
+	json.NewEncoder(w).Encode(post)
 }
