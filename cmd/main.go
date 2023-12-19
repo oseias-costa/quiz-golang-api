@@ -6,15 +6,23 @@ import (
 
 	"context"
 
-	"github.com/gorilla/mux"
-	"github.com/oseias-costa/quiz-golang-api/handler"
+	"github.com/oseias-costa/quiz-golang-api/controller"
+	router "github.com/oseias-costa/quiz-golang-api/http"
+	"github.com/oseias-costa/quiz-golang-api/repository"
+	"github.com/oseias-costa/quiz-golang-api/service"
 
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
 
+var (
+	postRepository repository.PostRepository = repository.NewPostRepository()
+	postService    service.PostService       = service.NewPostService(postRepository)
+	postController controller.PostController = controller.NewPostController(postService)
+	httpRouter     router.Router             = router.NewMuxRouter()
+)
+
 func main() {
-	r := mux.NewRouter()
 	port := ":8000"
 
 	opt := option.WithCredentialsFile("/home/oseias-costa/test-cfcbf-firebase-adminsdk-9keyk-2ae765abd7.json")
@@ -29,12 +37,12 @@ func main() {
 	}
 	defer client.Close()
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	httpRouter.GET("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("hello"))
 	})
-	r.HandleFunc("/posts", handler.GetAllPosts).Methods(http.MethodGet)
-	r.HandleFunc("/posts", handler.AddPost).Methods(http.MethodPost)
+	httpRouter.GET("/posts", postController.GetAllPosts)
+	httpRouter.POST("/posts", postController.AddPost)
 
-	http.ListenAndServe(port, r)
+	httpRouter.SERVE(port)
 }
