@@ -42,6 +42,24 @@ func TestFindAll(t *testing.T) {
 	assert.Equal(t, ageMock, result[0].Age)
 }
 
+func TestCreate(t *testing.T) {
+	mockRepo := new(MockRepository)
+
+	var ageMock int64 = 32
+	post := entity.Post{Name: "Oséias", Age: 32}
+
+	mockRepo.On("Save").Return(&post, nil)
+	testService := NewPostService(mockRepo)
+
+	result, err := testService.Create(&post)
+
+	mockRepo.AssertExpectations(t)
+	assert.NotNil(t, result.Id)
+	assert.Equal(t, "Oséias", result.Name)
+	assert.Equal(t, ageMock, result.Age)
+	assert.Nil(t, err)
+}
+
 func TestPostService(t *testing.T) {
 	testService := NewPostService(nil)
 
